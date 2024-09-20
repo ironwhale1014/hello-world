@@ -1,72 +1,57 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-export interface Movie {
-  id: number;
-  title: string;
-}
+import { CreateMovieDto } from './dto/create-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
+import { Movie } from './entity/movie.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MovieService {
-  private movies: Movie[] = [
-    {
-      title: '반지의 제왕',
-      id: 1,
-    },
-    {
-      title: '해리포터',
-      id: 2,
-    },
-  ];
+  constructor(
+    @InjectRepository(Movie)
+    private readonly movieRepository: Repository<Movie>,
+  ) {}
 
-  getManyMovies(title: string): Movie[] {
-    if (!title) {
-      return this.movies;
-    }
-    return this.movies.filter((item: Movie) => {
-      return item.title.startsWith(title);
-    });
+  async getManyMovies(title?: string) {
+    const movies = await this.movieRepository.find();
+
+    return movies;
   }
 
-  getMovieById(id: number): Movie {
-    const movie = this.movies.find((item) => item.id === id);
+  async getMovieById(id: number) {
+    const movie = await this.movieRepository.findOne({ where: { id } });
 
     if (!movie) {
       throw new NotFoundException('존재 하지 않는 영화 입니다. ');
     }
-
     return movie;
   }
 
-  private idCounter = 3;
-
-  createMovie(title: string) {
-    const movie: Movie = {
-      id: this.idCounter++,
-      title: title,
-    };
-    this.movies.push(movie);
-
-    return movie;
+  async createMovie(body: CreateMovieDto) {
+    return await this.movieRepository.save(body);
   }
 
-  updateMovie(id: number, title: string) {
-    const movie = this.movies.find((item) => item.id === id);
+  async updateMovie(id: number, body: UpdateMovieDto) {
+    const updateResultPromise = await this.movieRepository.update(id, body);
+
+    if (!updateResultPromise) {
+      throw new NotFoundException('존재 하지 않는 영화 입니다.');
+    }
+
+    const newMovie = await this.movieRepository.findOne({ where: { id } });
+
+    return newMovie;
+  }
+
+  async deleteMovie(id: number) {
+    const movie = await this.movieRepository.findOne({ where: { id } });
+
     if (!movie) {
       throw new NotFoundException('존재 하지 않는 영화 입니다.');
     }
 
-    Object.assign(movie, { title });
+    await this.movieRepository.delete(movie);
 
-    return movie;
-  }
-
-  deleteMovie(id: number) {
-    const movieIndex = this.movies.findIndex((item) => item.id === +id);
-    if (movieIndex === -1) {
-      throw new NotFoundException('존재 하지 않는 영화 입니다.');
-    }
-    this.movies.splice(movieIndex, 1);
-
-    return movieIndex;
+    return id;
   }
 }
