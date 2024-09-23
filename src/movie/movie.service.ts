@@ -3,7 +3,7 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entity/movie.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class MovieService {
@@ -13,9 +13,15 @@ export class MovieService {
   ) {}
 
   async getManyMovies(title?: string) {
-    const movies = await this.movieRepository.find();
+    if (!title) {
+      return await this.movieRepository.findAndCount();
+    }
 
-    return movies;
+    return await this.movieRepository.findAndCount({
+      where: {
+        title: Like(`%${title}%`),
+      },
+    });
   }
 
   async getMovieById(id: number) {
@@ -32,15 +38,15 @@ export class MovieService {
   }
 
   async updateMovie(id: number, body: UpdateMovieDto) {
-    const updateResultPromise = await this.movieRepository.update(id, body);
+    const movie = await this.movieRepository.findOne({ where: { id } });
 
-    if (!updateResultPromise) {
+    if (!movie) {
       throw new NotFoundException('존재 하지 않는 영화 입니다.');
     }
 
-    const newMovie = await this.movieRepository.findOne({ where: { id } });
+    await this.movieRepository.update(id, body);
 
-    return newMovie;
+    return await this.movieRepository.findOne({ where: { id } });
   }
 
   async deleteMovie(id: number) {
