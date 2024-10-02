@@ -17,7 +17,7 @@ export class DirectorService {
   }
 
   findAll() {
-    return this.directorRepository.find();
+    return this.directorRepository.find({ relations: ['movie'] });
   }
 
   async findOne(id: number) {

@@ -2,6 +2,8 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -9,22 +11,30 @@ import {
 import { BaseTable } from '../../common/entity/baseTable';
 import { MovieDetail } from './movie-detail.entity';
 import { Director } from '../../director/entities/director.entity';
+import { Genre } from '../../genre/entities/genre.entity';
 
 @Entity()
 export class Movie extends BaseTable {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column()
+
+  @Column({ unique: true })
   title: string;
-  @Column()
-  genre: string;
+
+  @ManyToMany(() => Genre, (genre) => genre.movies)
+  @JoinTable()
+  genres: Genre[];
 
   @OneToOne(() => MovieDetail, (movieDetail) => movieDetail.id, {
     cascade: true,
+    nullable: false,
   })
   @JoinColumn()
   detail: MovieDetail;
 
-  @ManyToOne(() => Director, (director) => director.id, { cascade: true  })
+  @ManyToOne(() => Director, (director) => director.id, {
+    cascade: true,
+    nullable: false,
+  })
   director: Director;
 }
