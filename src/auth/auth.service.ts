@@ -1,12 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { User } from '../user/entities/user.entity';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Role, User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
-import e from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { validate } from 'class-validator';
+import { envVariablesKeys } from '../common/const/env.const';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +20,44 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  async parseBearerToken(rawToken: string, isRefreshToken: boolean) {
+    const basicSplit = rawToken.split(' ');
+
+    // ['Basic' , 'token']
+    if (basicSplit.length !== 2) {
+      throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
+    }
+
+    const [bearer, token] = basicSplit;
+
+    if (bearer.toLowerCase() !== 'bearer') {
+      throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
+    }
+
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>(
+          envVariablesKeys.refreshTokenSecret,
+        ),
+      });
+
+      if (isRefreshToken) {
+        if (payload.type !== 'refresh') {
+          throw new BadRequestException('리프레시 토큰을 입력해주세요');
+        }
+      } else {
+        if (payload.type !== 'access') {
+          throw new BadRequestException('access 토큰을 입력 해주세요');
+        }
+      }
+
+      return payload;
+    } catch (e) {
+      console.log(e);
+      throw new UnauthorizedException('토큰이 만료되었습니다.');
+    }
+  }
+
   parseBasicToken(rawToken: string) {
     const basicSplit = rawToken.split(' ');
 
@@ -25,7 +66,11 @@ export class AuthService {
       throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
     }
 
-    const [_, token] = basicSplit;
+    const [basic, token] = basicSplit;
+
+    if (basic.toLowerCase() !== 'basic') {
+      throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
+    }
 
     //그냥 외워!!
     const decoded = Buffer.from(token, 'base64').toString('utf-8');
@@ -55,7 +100,7 @@ export class AuthService {
 
     const hash = await bcrypt.hash(
       password,
-      this.configService.get<number>('HASH_ROUNDS'),
+      this.configService.get<number>(envVariablesKeys.hashRounds),
     );
 
     await this.userRepository.save({
@@ -66,12 +111,12 @@ export class AuthService {
     return this.userRepository.findOne({ where: { email: email } });
   }
 
-  async issueToken(user: User, isRefreshToken: boolean) {
+  async issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
     const refreshTokenSecret = this.configService.get<string>(
-      'REFRESH_TOKEN_SECRET',
+      envVariablesKeys.refreshTokenSecret,
     );
     const accessTokenSecret = this.configService.get<string>(
-      'ACCESS_TOKEN_SECRET',
+      envVariablesKeys.accessTokenSecret,
     );
 
     return await this.jwtService.signAsync(
