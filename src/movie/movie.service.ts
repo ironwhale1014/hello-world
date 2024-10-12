@@ -137,7 +137,10 @@ export class MovieService {
 
       await qr.commitTransaction();
 
-      return await this.movieRepository.findOne({ where: { id: movieId } });
+      return await this.movieRepository.findOne({
+        where: { id: movieId },
+        relations: ['detail', 'genres', 'director'],
+      });
     } catch (e) {
       await qr.rollbackTransaction();
       throw e;
