@@ -111,7 +111,10 @@ export class AuthService {
     return this.userRepository.findOne({ where: { email: email } });
   }
 
-  async issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
+  async issueToken(
+    user: { id?: number; role: Role; sub?: number; type?: string },
+    isRefreshToken: boolean,
+  ) {
     const refreshTokenSecret = this.configService.get<string>(
       envVariablesKeys.refreshTokenSecret,
     );
@@ -119,9 +122,14 @@ export class AuthService {
       envVariablesKeys.accessTokenSecret,
     );
 
+    console.log(!isRefreshToken);
+    if (!isRefreshToken && user.type === 'access') {
+      throw new BadRequestException('refresh Token을 입력해주세요.');
+    }
+
     return await this.jwtService.signAsync(
       {
-        sub: user.id,
+        sub: user.id || user.sub,
         role: user.role,
         type: isRefreshToken ? 'refresh' : 'access',
       },

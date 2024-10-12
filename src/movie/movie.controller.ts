@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UseInterceptors,
+  Request,
 } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -22,7 +23,11 @@ export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
   @Get('/')
-  getMovies(@Query('title', MovieTitleValidationPipe) title?: string) {
+  getMovies(
+    @Request() payload: any,
+    @Query('title', MovieTitleValidationPipe) title?: string,
+  ) {
+    console.log(payload.user);
     return this.movieService.getManyMovies(title);
   }
 
