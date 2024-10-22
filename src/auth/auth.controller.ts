@@ -28,6 +28,7 @@ export class AuthController {
     return this.authService.login(token);
   }
 
+  @Public()
   @Post('token/access')
   async rotateAccessToken(@Request() req) {
     console.log(req.user);

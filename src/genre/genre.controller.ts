@@ -13,6 +13,7 @@ import {
 import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
+import { Public } from '../auth/decorator/public.decorator';
 
 @Controller('genre')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -24,6 +25,7 @@ export class GenreController {
     return this.genreService.create(createGenreDto);
   }
 
+  @Public()
   @Get()
   findAll() {
     return this.genreService.findAll();

@@ -13,7 +13,9 @@ export class User extends BaseTable {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    unique: true,
+  })
   email: string;
 
   @Column()
