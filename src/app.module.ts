@@ -29,7 +29,7 @@ import { RBACGuard } from './auth/guard/rbac.guard';
       isGlobal: true,
       validationSchema: Joi.object({
         ENV: Joi.string().valid('dev', 'prod').required(),
-        DB_TYPE: Joi.string().valid('postgres').required(),
+        DB_TYPE: Joi.string().valid('postgres', 'mysql').required(),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().required(),
         DB_USERNAME: Joi.string().required(),
