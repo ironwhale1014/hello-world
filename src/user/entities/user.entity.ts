@@ -25,6 +25,7 @@ export class User extends BaseTable {
   password: string;
 
   @Column({
+    type: 'enum',
     enum: Role,
     default: Role.user,
   })
