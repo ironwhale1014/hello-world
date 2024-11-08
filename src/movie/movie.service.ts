@@ -3,7 +3,7 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entity/movie.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, DataSource } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { MovieDetail } from './entity/movie-detail.entity';
 import { Director } from '../director/entities/director.entity';
 import { Genre } from '../genre/entities/genre.entity';
@@ -26,7 +26,7 @@ export class MovieService {
   ) {}
 
   async getManyMovies(dto: GetMovieDto) {
-    const { title, take, page } = dto;
+    const { title, take, cursor, order } = dto;
 
     const qb = this.movieRepository
       .createQueryBuilder('movie')
@@ -36,12 +36,18 @@ export class MovieService {
     if (title) {
       qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
-
-    if (take && page) {
-      this.commonService.applyPagePaginationParamsToQb(qb, dto);
-    }
-
-    return qb.getManyAndCount();
+    const [data, count] = await qb.getManyAndCount();
+    const { nextCursor } = await this.commonService.applyCursorPagination(
+      qb,
+      take,
+      order,
+      cursor,
+    );
+    return {
+      count,
+      nextCursor,
+      data,
+    };
   }
 
   async getMovieById(id: number) {
@@ -52,6 +58,8 @@ export class MovieService {
       .leftJoinAndSelect('movie.genres', 'genres')
       .where('movie.id = :id', { id })
       .getOne();
+
+    console.log(movie.director.name);
 
     //
     // const movie = await this.movieRepository.findOne({

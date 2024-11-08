@@ -41,16 +41,22 @@ import { RBACGuard } from './auth/guard/rbac.guard';
       }),
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        type: configService.get<string>(envVariablesKeys.dbType) as 'postgres',
-        host: configService.get<string>(envVariablesKeys.dbHost),
-        port: configService.get<number>(envVariablesKeys.dbPort),
-        username: configService.get<string>(envVariablesKeys.dbUsername),
-        password: configService.get<string>(envVariablesKeys.dbPassword),
-        database: configService.get<string>(envVariablesKeys.dbDatabase),
-        synchronize: true,
-        entities: [Movie, MovieDetail, Director, Genre, User],
-      }),
+      useFactory: (configService: ConfigService) => {
+        console.log(new Date());
+        return {
+          type: configService.get<string>(
+            envVariablesKeys.dbType,
+          ) as 'postgres',
+          host: configService.get<string>(envVariablesKeys.dbHost),
+          port: configService.get<number>(envVariablesKeys.dbPort),
+          username: configService.get<string>(envVariablesKeys.dbUsername),
+          password: configService.get<string>(envVariablesKeys.dbPassword),
+          database: configService.get<string>(envVariablesKeys.dbDatabase),
+          synchronize: true,
+          entities: [Movie, MovieDetail, Director, Genre, User],
+          logging: true,
+        };
+      },
       inject: [ConfigService],
     }),
     MovieModule,

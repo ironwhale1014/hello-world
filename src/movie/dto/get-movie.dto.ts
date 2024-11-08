@@ -1,7 +1,7 @@
 import { IsOptional, IsString } from 'class-validator';
-import { PagePaginationDto } from '../../common/dto/PaginationDto';
+import { CursorDto } from '../../common/dto/cursor.dto';
 
-export class GetMovieDto extends PagePaginationDto {
+export class GetMovieDto extends CursorDto {
   @IsString()
   @IsOptional()
   title?: string;

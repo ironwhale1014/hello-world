@@ -21,7 +21,14 @@ export class DirectorService {
   }
 
   async findOne(id: number) {
-    return await this.directorRepository.findOne({ where: { id } });
+    const find = await this.directorRepository.findOne({
+      where: { id },
+      relations: ['movies'],
+    });
+    if (!find) {
+      throw new NotFoundException('not found director');
+    }
+    return find;
   }
 
   async update(id: number, updateDirectorDto: UpdateDirectorDto) {

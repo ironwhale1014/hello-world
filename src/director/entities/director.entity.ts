@@ -12,10 +12,10 @@ export class Director extends BaseTable {
 
   @Column()
   dob: Date;
-  
+
   @Column()
   nationality: string;
 
-  @OneToMany(() => Movie, (movie) => movie.director)
-  movie: Movie[];
+  @OneToMany(() => Movie, (movie) => movie.detail)
+  movies: Movie[];
 }
