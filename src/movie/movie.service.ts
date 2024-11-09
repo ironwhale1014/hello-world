@@ -26,7 +26,7 @@ export class MovieService {
   ) {}
 
   async getManyMovies(dto: GetMovieDto) {
-    const { title, take, cursor, order } = dto;
+    const { title } = dto;
 
     const qb = this.movieRepository
       .createQueryBuilder('movie')
@@ -36,13 +36,13 @@ export class MovieService {
     if (title) {
       qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
-    const [data, count] = await qb.getManyAndCount();
+
     const { nextCursor } = await this.commonService.applyCursorPagination(
       qb,
-      take,
-      order,
-      cursor,
+      dto,
     );
+
+    const [data, count] = await qb.getManyAndCount();
     return {
       count,
       nextCursor,

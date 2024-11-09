@@ -10,7 +10,6 @@ export class RBACGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const role = this.reflector.get<Role>(RBAC, context.getHandler());
 
-    console.log(role);
     if (!Object.values(Role).includes(role)) {
       return true;
     }
@@ -22,9 +21,6 @@ export class RBACGuard implements CanActivate {
     if (!user) {
       return false;
     }
-
-    console.log(user);
-
     // user.role === 토큰의 롤 // role은 가드에 적용된 롤
     return user.role <= role;
   }

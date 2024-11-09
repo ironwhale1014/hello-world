@@ -54,7 +54,7 @@ import { RBACGuard } from './auth/guard/rbac.guard';
           database: configService.get<string>(envVariablesKeys.dbDatabase),
           synchronize: true,
           entities: [Movie, MovieDetail, Director, Genre, User],
-          logging: true,
+          logging: false,
         };
       },
       inject: [ConfigService],

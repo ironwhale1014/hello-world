@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { SelectQueryBuilder } from 'typeorm';
 import { PagePaginationDto } from './dto/PaginationDto';
+import { CursorDto } from './dto/cursor.dto';
 
 @Injectable()
 export class CommonService {
@@ -17,13 +18,39 @@ export class CommonService {
     qb.skip(skip);
   }
 
-  async applyCursorPagination<T>(
-    qb: SelectQueryBuilder<T>,
-    take: number,
-    order: string[],
-    cursor: string,
-  ) {
+  async applyCursorPagination<T>(qb: SelectQueryBuilder<T>, dto: CursorDto) {
+    let { order } = dto;
+    const { take, cursor } = dto;
+
     if (cursor) {
+      const parsedCursor = Buffer.from(cursor, 'base64').toString('utf-8');
+      const jsonCursor = JSON.parse(parsedCursor);
+      // {
+      //   values: {
+      //     id: 5;
+      //   }
+      // ,
+      //   order: ['id_ASC'];
+      // }
+      //(movie.column1, movie.column2, movie.column3) > (:value1, :value2, :value3)
+      order = jsonCursor.order;
+      const values = jsonCursor.values;
+      const directionCondition = order.some((o) => o.endsWith('ASC'))
+        ? '>'
+        : '<';
+      const columns = Object.keys(values)
+        .map((value) => `${qb.alias}.${value}`)
+        .join(', ');
+      const valueConditions = Object.keys(values)
+        .map((value) => `:${value}`)
+        .join(', ');
+
+      console.log(`(${columns}) ${directionCondition} (${valueConditions})`);
+
+      qb.where(
+        `(${columns}) ${directionCondition} (${valueConditions})`,
+        values,
+      );
     }
 
     for (let i = 0; i < order.length; i++) {
@@ -40,7 +67,8 @@ export class CommonService {
     }
 
     qb.take(take);
-    const nextCursor = this.generateCursor(await qb.getMany(), order);
+    const results = await qb.getMany();
+    const nextCursor = this.generateCursor(results, order);
     return { qb, nextCursor };
   }
 

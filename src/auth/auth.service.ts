@@ -122,7 +122,6 @@ export class AuthService {
       envVariablesKeys.accessTokenSecret,
     );
 
-    console.log(!isRefreshToken);
     if (!isRefreshToken && user.type === 'access') {
       throw new BadRequestException('refresh Token을 입력해주세요.');
     }
