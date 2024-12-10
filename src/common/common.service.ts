@@ -87,6 +87,7 @@ export class CommonService {
      */
 
     const lastItem = results[results.length - 1];
+    console.log(lastItem);
     const values = {};
     order.forEach((item) => {
       const [column] = item.split('_');
@@ -94,6 +95,7 @@ export class CommonService {
     });
 
     const cursorObj = { values, order };
+    console.log(cursorObj);
     return Buffer.from(JSON.stringify(cursorObj)).toString('base64');
   }
 }
