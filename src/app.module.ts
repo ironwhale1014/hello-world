@@ -24,6 +24,7 @@ import { AuthGuard } from './auth/guard/auth.guard';
 import { RBACGuard } from './auth/guard/rbac.guard';
 import { ResponseTimeInterceptor } from './common/interceptor/response_time.interceptor';
 import { ForbiddenFilter } from './common/filter/forbidden.filter';
+import { QueryFilter } from './common/filter/query.filter';
 
 @Module({
   imports: [
@@ -84,6 +85,10 @@ import { ForbiddenFilter } from './common/filter/forbidden.filter';
     {
       provide: APP_FILTER,
       useClass: ForbiddenFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: QueryFilter,
     },
   ],
 })
